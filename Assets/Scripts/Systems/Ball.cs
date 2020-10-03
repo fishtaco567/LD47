@@ -29,11 +29,20 @@ public class Ball : MonoBehaviour {
         if(currentTile == null) {
             currentVelocity += currentAcceleration;
             var newPosition = currentPosition + currentVelocity;
-            Move(currentPosition, newPosition);
+            Move(newPosition);
         }
     }
 
-    private void Move(Vector3Int initialPosition, Vector3Int newPosition) {
+    public void SetPositionVelocity(Vector3Int newPosition, Vector3Int newVelocity) {
+        currentPosition = newPosition;
+        currentVelocity = newVelocity;
+    }
+
+    public void SetAcceleration(Vector3Int newAccel) {
+        currentAcceleration = newAccel;
+    }
+
+    private void Move(Vector3Int newPosition) {
         var hit = newPosition;
         var hitNormal = new Vector3();
         var hitType = CheckLine(currentPosition.x, currentPosition.y, currentPosition.z, newPosition.x, newPosition.y, newPosition.z, out hit, out hitNormal);
@@ -72,11 +81,11 @@ public class Ball : MonoBehaviour {
                     case HitClass.Bounce:
                     case HitClass.Hit:
                         currentPosition = hit;
-                        if(hitNormal.x > hitNormal.y && hitNormal.x > hitNormal.z) {
+                        if(Mathf.Abs(hitNormal.x) > Mathf.Abs(hitNormal.y) && Mathf.Abs(hitNormal.x) > Mathf.Abs(hitNormal.z)) {
                             currentVelocity.x = 0;
                         }
                         //Hit on Y
-                        else if(hitNormal.y > hitNormal.x && hitNormal.y > hitNormal.z) {
+                        else if(Mathf.Abs(hitNormal.y) > Mathf.Abs(hitNormal.x) && Mathf.Abs(hitNormal.y) > Mathf.Abs(hitNormal.z)) {
                             currentVelocity.y = 0;
                         }
                         //Hit on Z
@@ -90,11 +99,11 @@ public class Ball : MonoBehaviour {
             case HitClass.Hit:
                 currentPosition = hit;
                 //Hit on X
-                if(hitNormal.x > hitNormal.y && hitNormal.x > hitNormal.z) {
+                if(Mathf.Abs(hitNormal.x) > Mathf.Abs(hitNormal.y) && Mathf.Abs(hitNormal.x) > Mathf.Abs(hitNormal.z)) {
                     currentVelocity.x = 0;
                 }
                 //Hit on Y
-                else if(hitNormal.y > hitNormal.x && hitNormal.y > hitNormal.z) {
+                else if(Mathf.Abs(hitNormal.y) > Mathf.Abs(hitNormal.x) && Mathf.Abs(hitNormal.y) > Mathf.Abs(hitNormal.z)) {
                     currentVelocity.y = 0;
                 }
                 //Hit on Z

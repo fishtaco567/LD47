@@ -35,4 +35,22 @@ public abstract class Tile : MonoBehaviour {
         var grid = GetComponentInParent<Grid>();
         transform.position = new Vector3(x * grid.tileSize.x, y * grid.tileSize.y, z * grid.tileSize.z);
     }
+
+    protected Vector3Int ReduceToDirection(Vector3 normal) {
+        var direction = new Vector3Int();
+        if(Mathf.Abs(normal.x) > Mathf.Abs(normal.y) && Mathf.Abs(normal.x) > Mathf.Abs(normal.z)) {
+            direction.x = (int)Mathf.Sign(normal.x);
+        } else if(Mathf.Abs(normal.y) > Mathf.Abs(normal.x) && Mathf.Abs(normal.y) > Mathf.Abs(normal.z)) {
+            direction.y = (int)Mathf.Sign(normal.y);
+        } else {
+            direction.z = (int)Mathf.Sign(normal.z);
+        }
+
+        return direction;
+    }
+
+    protected Vector3Int TileBasePos() {
+        return new Vector3Int(x, y, z);
+    }
+
 }
