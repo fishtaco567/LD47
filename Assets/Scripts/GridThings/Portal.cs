@@ -7,8 +7,13 @@ public class Portal : Tile {
 
     public override bool AcceptBall(Vector3Int position, Ball ball, Vector3 hitNormal) {
         var direction = ReduceToDirection(hitNormal);
-        ball.SetPositionVelocity(pairedPortal.TileBasePos() + direction, new Vector3Int());
+        Debug.Log(hitNormal);
+        ball.SetPositionVelocity(pairedPortal.TileBasePos() - direction, new Vector3Int());
         ball.currentTile = null;
         return true;
+    }
+
+    public override void PostAccept(Vector3Int position, Ball ball, Vector3 hitNormal) {
+        ball.currentTile = null;
     }
 }

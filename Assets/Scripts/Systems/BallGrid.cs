@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Grid : MonoBehaviour
+public class BallGrid : MonoBehaviour
 {
 
     public Vector3 tileSize;
 
-    public Vector3 gridSize;
+    public Vector3Int gridSize;
 
-    public Tile[][][] tileGrid;
+    public Tile[,,] tileGrid;
 
     private Tile tempTile;
     private Vector3Int[] tempCoordList;
@@ -17,12 +17,15 @@ public class Grid : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        foreach(GameObject tile in transform) {
+        tileGrid = new Tile[gridSize.x, gridSize.y, gridSize.z];
+
+        for(int i = 0; i < transform.childCount; i++) {
+            var tile = transform.GetChild(i);
             tempTile = tile.GetComponent<Tile>();
             tempCoordList = tempTile.GridPoints();
             foreach(Vector3Int gridPoint in tempCoordList) {
-                if(tileGrid[gridPoint.x][gridPoint.y][gridPoint.z] == null) {
-                    tileGrid[gridPoint.x][gridPoint.y][gridPoint.z] = tempTile;
+                if(tileGrid[gridPoint.x, gridPoint.y, gridPoint.z] == null) {
+                    tileGrid[gridPoint.x, gridPoint.y, gridPoint.z] = tempTile;
                 }
             }
         }

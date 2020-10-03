@@ -15,6 +15,10 @@ public abstract class Tile : MonoBehaviour {
 
     public abstract bool AcceptBall(Vector3Int position, Ball ball, Vector3 hitNormal);
 
+    public virtual void PostAccept(Vector3Int position, Ball ball, Vector3 hitNormal) {
+    
+    }
+
     public Vector3Int[] GridPoints() {
         var list = new Vector3Int[sizeX * sizeY * sizeZ];
 
@@ -24,6 +28,7 @@ public abstract class Tile : MonoBehaviour {
             for(int j = 0; j < sizeY; j++) {
                 for(int k = 0; k < sizeZ; k++) {
                     list[index] = new Vector3Int(i + x, j + y, k + z);
+                    index++;
                 }
             }
         }
@@ -32,8 +37,10 @@ public abstract class Tile : MonoBehaviour {
     }
 
     private void OnValidate() {
-        var grid = GetComponentInParent<Grid>();
-        transform.position = new Vector3(x * grid.tileSize.x, y * grid.tileSize.y, z * grid.tileSize.z);
+        var grid = GetComponentInParent<BallGrid>();
+        if(grid != null) {
+            transform.position = new Vector3(x * grid.tileSize.x, y * grid.tileSize.y, z * grid.tileSize.z) + grid.transform.position;
+        }
     }
 
     protected Vector3Int ReduceToDirection(Vector3 normal) {

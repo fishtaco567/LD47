@@ -8,7 +8,8 @@ public class Ball : MonoBehaviour {
         Accepted,
         Hit,
         Bounce,
-        NoHit
+        NoHit,
+        OutOfBounds
     }
 
     public Tile currentTile;
@@ -17,7 +18,7 @@ public class Ball : MonoBehaviour {
     public Vector3Int currentVelocity;
     public Vector3Int currentAcceleration;
 
-    public Grid grid;
+    public BallGrid grid;
 
     // Use this for initialization
     void Start() {
@@ -29,13 +30,20 @@ public class Ball : MonoBehaviour {
         if(currentTile == null) {
             currentVelocity += currentAcceleration;
             var newPosition = currentPosition + currentVelocity;
+            Debug.Log("Try move to " + newPosition);
             Move(newPosition);
         }
+    }
+
+    public void SetPosition(Vector3Int newPosition) {
+        currentPosition = newPosition;
+        transform.position = currentPosition + grid.transform.position;
     }
 
     public void SetPositionVelocity(Vector3Int newPosition, Vector3Int newVelocity) {
         currentPosition = newPosition;
         currentVelocity = newVelocity;
+        transform.position = currentPosition + grid.transform.position;
     }
 
     public void SetAcceleration(Vector3Int newAccel) {
@@ -51,7 +59,7 @@ public class Ball : MonoBehaviour {
             case HitClass.Accepted:
                 break;
             case HitClass.Bounce:
-                currentPosition = hit;
+                SetPosition(hit);
                 //Hit on X
                 var remainingMovement = newPosition - hit;
                 if(hitNormal.x > hitNormal.y && hitNormal.x > hitNormal.z) {
@@ -74,13 +82,13 @@ public class Ball : MonoBehaviour {
                 var hitType2 = CheckLine(currentPosition.x, currentPosition.y, currentPosition.z, newPosition.x, newPosition.y, newPosition.z, out hit, out hitNormal);
                 switch(hitType2) {
                     case HitClass.NoHit:
-                        currentPosition = newPosition;
+                        SetPosition(newPosition);
                         break;
                     case HitClass.Accepted:
                         break;
                     case HitClass.Bounce:
                     case HitClass.Hit:
-                        currentPosition = hit;
+                        SetPosition(hit);
                         if(Mathf.Abs(hitNormal.x) > Mathf.Abs(hitNormal.y) && Mathf.Abs(hitNormal.x) > Mathf.Abs(hitNormal.z)) {
                             currentVelocity.x = 0;
                         }
@@ -93,11 +101,13 @@ public class Ball : MonoBehaviour {
                             currentVelocity.z = 0;
                         }
                         break;
+                    case HitClass.OutOfBounds:
+                        Destroy(this.gameObject);
+                        break;
                 }
-                currentPosition = hit;
                 break;
             case HitClass.Hit:
-                currentPosition = hit;
+                SetPosition(hit);
                 //Hit on X
                 if(Mathf.Abs(hitNormal.x) > Mathf.Abs(hitNormal.y) && Mathf.Abs(hitNormal.x) > Mathf.Abs(hitNormal.z)) {
                     currentVelocity.x = 0;
@@ -112,12 +122,18 @@ public class Ball : MonoBehaviour {
                 }
                 break;
             case HitClass.NoHit:
-                currentPosition = newPosition;
+                SetPosition(newPosition);
+                break;
+            case HitClass.OutOfBounds:
+                Destroy(this.gameObject);
                 break;
         }
     }
 
     private HitClass CheckLine(int x0, int y0, int z0, int x1, int y1, int z1, out Vector3Int hit, out Vector3 hitNormal) {
+        var start = new Vector3Int(x0, y0, z0);
+        var end = new Vector3Int(x1, y1, z1);
+
         hitNormal = new Vector3(1, 0, 0);
 
         bool steepXY = Math.Abs(y1 - y0) > Math.Abs(x1 - x0);
@@ -145,18 +161,26 @@ public class Ball : MonoBehaviour {
 
             if(steepXZ) Swap(ref xCopy, ref zCopy);
             if(steepXY) Swap(ref xCopy, ref yCopy);
+            Debug.Log(xCopy + ", " + yCopy + ", " + zCopy);
+            
+            if(xCopy > grid.gridSize.x || yCopy > grid.gridSize.y || zCopy > grid.gridSize.z) {
+                hit = new Vector3Int(xCopy, yCopy, zCopy);
+                return HitClass.OutOfBounds;
+            }
 
-            var tileTest = grid.tileGrid[x][y][z];
+            var tileTest = grid.tileGrid[xCopy, yCopy, zCopy];
             if(tileTest != null) {
-                var direction = new Vector3(x1 - x0, y1 - y0, z1 - z0);
+                var direction = end -  start;
                 RaycastHit rayHit;
-                if(Physics.Raycast(new Vector3(x0, y0, z0), direction, out rayHit, direction.magnitude)) {
+                Debug.DrawRay(start + grid.transform.position + new Vector3(.5f, .5f, .5f), direction);
+                if(Physics.Raycast(start + grid.transform.position + new Vector3(.5f, .5f, .5f), direction, out rayHit, direction.magnitude)) {
                     hitNormal = rayHit.normal;
                 }
 
-                if(tileTest.AcceptBall(new Vector3Int(x, y, z), this, hitNormal)) {
+                if(tileTest.AcceptBall(new Vector3Int(xCopy, yCopy, zCopy), this, hitNormal)) {
                     this.currentTile = tileTest;
-                    hit = new Vector3Int(x, y, z);
+                    hit = new Vector3Int(xCopy, yCopy, zCopy);
+                    tileTest.PostAccept(new Vector3Int(xCopy, yCopy, zCopy), this, hitNormal);
                     return HitClass.Accepted;
                 } else {
                     if(tileTest.bounce) {
@@ -193,6 +217,10 @@ public class Ball : MonoBehaviour {
         T tmp = y;
         y = x;
         x = tmp;
+    }
+
+    private void OnValidate() {
+        transform.position = currentPosition + grid.transform.position;
     }
 
 }
