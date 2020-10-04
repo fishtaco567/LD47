@@ -1,9 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using Sirenix;
 
 public class Goal : MonoBehaviour {
 
-    List<IGoalItem> goals;
+    public List<Tile> goals;
+
+    public List<Goal> previousGoals;
 
     // Use this for initialization
     void Start() {
@@ -16,8 +19,14 @@ public class Goal : MonoBehaviour {
     }
 
     public bool GoalsSatisfied() {
-        foreach(IGoalItem goal in goals) {
-            if(!goal.IsSatisfied()) {
+        foreach(Tile tile in goals) {
+            if(!tile.IsSatisfied()) {
+                return false;
+            }
+        }
+
+        foreach(Goal goal in previousGoals) {
+            if(!goal.GoalsSatisfied()) {
                 return false;
             }
         }

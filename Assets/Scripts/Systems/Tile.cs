@@ -91,4 +91,8 @@ public abstract class Tile : MonoBehaviour {
         return new Vector3Int(x, y, z);
     }
 
+    public virtual bool IsSatisfied() {
+        return false;
+    }
+
 }

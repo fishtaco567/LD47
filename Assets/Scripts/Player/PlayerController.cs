@@ -32,6 +32,8 @@ public class PlayerController : MonoBehaviour {
     private float timeSinceLastPush;
     private Tile currentTile;
 
+    new public CameraController camera;
+
     // Use this for initialization
     void Start() {
         timeSinceLastPush = 0;
@@ -119,6 +121,14 @@ public class PlayerController : MonoBehaviour {
 
                 break;
         }
+    }
+
+    public void OnEnterRoom(GameObject room) {
+        camera.LockToRoom(room.GetComponent<CameraFocus>());
+    }
+
+    public void OnExitRoom(GameObject room) {
+        camera.LockToPlayer(GetComponent<CameraFocus>());
     }
 
 }

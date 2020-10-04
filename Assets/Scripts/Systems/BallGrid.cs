@@ -81,6 +81,7 @@ public class BallGrid : MonoBehaviour
 
         if(player != null) {
             player.grid = this;
+            player.OnEnterRoom(this.gameObject);
         }
     }
 
@@ -89,6 +90,7 @@ public class BallGrid : MonoBehaviour
 
         if(player != null) {
             player.grid = null;
+            player.OnExitRoom(this.gameObject);
         }
     }
 

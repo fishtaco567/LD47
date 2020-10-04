@@ -6,7 +6,7 @@
          _Metallic ("Metallic", Range(0,1)) = 0.0
      }
      SubShader {
-         Tags { "RenderType"="Transparent" }
+         Tags { "RenderType"="Opaque" }
          LOD 200
          
          CGPROGRAM
@@ -43,7 +43,7 @@
              // Metallic and smoothness come from slider variables
              o.Metallic = _Metallic;
              o.Smoothness = _Glossiness;
-             o.Alpha = c.a;
+             o.Alpha = _Color.a;
          }
          ENDCG
      } 

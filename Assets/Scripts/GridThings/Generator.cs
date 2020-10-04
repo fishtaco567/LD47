@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Generator : Tile, IGoalItem {
+public class Generator : Tile {
 
     public float timeBetweenHits;
     public Vector3Int entryDirection;
@@ -20,7 +20,7 @@ public class Generator : Tile, IGoalItem {
     public GameObject rotatedObject;
 
     public void Start() {
-        timeSinceLastHit = 0;
+        timeSinceLastHit = timeBetweenHits;
     }
 
     public void Update() {
@@ -50,7 +50,7 @@ public class Generator : Tile, IGoalItem {
         }
     }
 
-    public bool IsSatisfied() {
+    public override bool IsSatisfied() {
         return timeSinceLastHit < timeBetweenHits;
     }
 

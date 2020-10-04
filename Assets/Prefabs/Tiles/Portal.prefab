@@ -57,7 +57,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: b99dabb407a1d7e4db612a83a4dd3a6a, type: 2}
+  - {fileID: 2100000, guid: 4e9a8cabed7d81945ae152711c6555ce, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -150,6 +150,11 @@ MonoBehaviour:
   sizeZ: 0
   bounce: 0
   pairedPortal: {fileID: 0}
+  blorpTime: 0
+  retainTime: 0.5
+  retainedBall: {fileID: 0}
+  direction: {x: 0, y: 0, z: 0}
+  isDestination: 0
 --- !u!65 &6294574504827704577
 BoxCollider:
   m_ObjectHideFlags: 0
