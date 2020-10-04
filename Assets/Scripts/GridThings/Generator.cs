@@ -31,9 +31,9 @@ public class Generator : Tile, IGoalItem {
         }
     }
 
-    public void FixedUpdate() {
+    public override void Tick() {
         if(ball != null && timeSinceLastHit > timeRetainBall) {
-            ball.SetPositionVelocity(exitTile + TileBasePos(), exitVelocity);
+            ball.SetPositionVelocity(exitTile + TileBasePos(), exitVelocity, false);
             ball.currentTile = null;
             ball = null;
         }
@@ -42,7 +42,7 @@ public class Generator : Tile, IGoalItem {
     public override bool AcceptBall(Vector3Int position, Ball ball, Vector3 hitNormal) {
         if(position == new Vector3Int(x, y, z) + entryTile && (ReduceToDirection(hitNormal) == entryDirection || entryDirection.magnitude < 0.01)) {
             this.ball = ball;
-            ball.SetPositionVelocity(new Vector3Int(x, y, z), new Vector3Int(0, 0, 0));
+            ball.SetPositionVelocity(new Vector3Int(x, y, z), new Vector3Int(0, 0, 0), false);
             timeSinceLastHit = 0;
             return true;
         } else {

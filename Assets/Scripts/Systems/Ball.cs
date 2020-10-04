@@ -4,6 +4,8 @@ using System;
 
 public class Ball : MonoBehaviour {
 
+    private int[] otherCoordPairs = { 2, 0, 0, 1, 2, 1 };
+
     public enum HitClass {
         Accepted,
         Hit,
@@ -18,32 +20,50 @@ public class Ball : MonoBehaviour {
     public Vector3Int currentVelocity;
     public Vector3Int currentAcceleration;
 
+    private Vector3Int lastFramePosition;
+
     public BallGrid grid;
+
+    private float timeSinceLastTick;
 
     // Use this for initialization
     void Start() {
+        timeSinceLastTick = 0;
+        grid.tick += Tick;
+    }
 
+    private void Update() {
+        timeSinceLastTick += Time.deltaTime;
+        transform.position = Vector3.Lerp(lastFramePosition, currentPosition, timeSinceLastTick / grid.tickTime) + grid.transform.position;
     }
 
     // Update is called once per frame
-    void FixedUpdate() {
+    void Tick() {
+        timeSinceLastTick = 0;
+        lastFramePosition = currentPosition;
+
         if(currentTile == null) {
             currentVelocity += currentAcceleration;
             var newPosition = currentPosition + currentVelocity;
-            Debug.Log("Try move to " + newPosition);
             Move(newPosition);
         }
     }
 
-    public void SetPosition(Vector3Int newPosition) {
+    public void SetPosition(Vector3Int newPosition, bool teleport) {
+        lastFramePosition = currentPosition;
         currentPosition = newPosition;
-        transform.position = currentPosition + grid.transform.position;
+        if(teleport) {
+            lastFramePosition = currentPosition;
+        }
     }
 
-    public void SetPositionVelocity(Vector3Int newPosition, Vector3Int newVelocity) {
+    public void SetPositionVelocity(Vector3Int newPosition, Vector3Int newVelocity, bool teleport) {
+        lastFramePosition = currentPosition;
         currentPosition = newPosition;
         currentVelocity = newVelocity;
-        transform.position = currentPosition + grid.transform.position;
+        if(teleport) {
+            lastFramePosition = currentPosition;
+        }
     }
 
     public void SetAcceleration(Vector3Int newAccel) {
@@ -59,7 +79,7 @@ public class Ball : MonoBehaviour {
             case HitClass.Accepted:
                 break;
             case HitClass.Bounce:
-                SetPosition(hit);
+                SetPosition(hit, false);
                 //Hit on X
                 var remainingMovement = newPosition - hit;
                 if(hitNormal.x > hitNormal.y && hitNormal.x > hitNormal.z) {
@@ -82,13 +102,13 @@ public class Ball : MonoBehaviour {
                 var hitType2 = CheckLine(currentPosition.x, currentPosition.y, currentPosition.z, newPosition.x, newPosition.y, newPosition.z, out hit, out hitNormal);
                 switch(hitType2) {
                     case HitClass.NoHit:
-                        SetPosition(newPosition);
+                        SetPosition(newPosition, false);
                         break;
                     case HitClass.Accepted:
                         break;
                     case HitClass.Bounce:
                     case HitClass.Hit:
-                        SetPosition(hit);
+                        SetPosition(hit, false);
                         if(Mathf.Abs(hitNormal.x) > Mathf.Abs(hitNormal.y) && Mathf.Abs(hitNormal.x) > Mathf.Abs(hitNormal.z)) {
                             currentVelocity.x = 0;
                         }
@@ -107,7 +127,7 @@ public class Ball : MonoBehaviour {
                 }
                 break;
             case HitClass.Hit:
-                SetPosition(hit);
+                SetPosition(hit, false);
                 //Hit on X
                 if(Mathf.Abs(hitNormal.x) > Mathf.Abs(hitNormal.y) && Mathf.Abs(hitNormal.x) > Mathf.Abs(hitNormal.z)) {
                     currentVelocity.x = 0;
@@ -122,7 +142,7 @@ public class Ball : MonoBehaviour {
                 }
                 break;
             case HitClass.NoHit:
-                SetPosition(newPosition);
+                SetPosition(newPosition, false);
                 break;
             case HitClass.OutOfBounds:
                 Destroy(this.gameObject);
@@ -130,86 +150,100 @@ public class Ball : MonoBehaviour {
         }
     }
 
-    private HitClass CheckLine(int x0, int y0, int z0, int x1, int y1, int z1, out Vector3Int hit, out Vector3 hitNormal) {
+    public HitClass CheckLine(int x0, int y0, int z0, int x1, int y1, int z1, out Vector3Int hit, out Vector3 hitNormal) {
         var start = new Vector3Int(x0, y0, z0);
         var end = new Vector3Int(x1, y1, z1);
+        hit = new Vector3Int();
+        hitNormal = new Vector3();
 
-        hitNormal = new Vector3(1, 0, 0);
+        var initialPosition = new int[3];
+        var finalPosition = new int[3];
 
-        bool steepXY = Math.Abs(y1 - y0) > Math.Abs(x1 - x0);
-        if(steepXY) { Swap(ref x0, ref y0); Swap(ref x1, ref y1); }
+        initialPosition[0] = x0;
+        initialPosition[1] = y0;
+        initialPosition[2] = z0;
 
-        bool steepXZ = Math.Abs(z1 - z0) > Math.Abs(x1 - x0);
-        if(steepXZ) { Swap(ref x0, ref z0); Swap(ref x1, ref z1); }
+        finalPosition[0] = x1;
+        finalPosition[1] = y1;
+        finalPosition[2] = z1;
 
-        int deltaX = Math.Abs(x1 - x0);
-        int deltaY = Math.Abs(y1 - y0);
-        int deltaZ = Math.Abs(z1 - z0);
+        int[] direction = {
+            0, 0, 0
+        };
 
-        int errorXY = deltaX / 2, errorXZ = deltaX / 2;
+        int maxGradDir = 0;
+        for(int i = 0; i < 3; i++) {
+            direction[i] = finalPosition[i] - initialPosition[i];
+            if(Mathf.Abs(direction[i]) > Mathf.Abs(direction[maxGradDir])) {
+                maxGradDir = i;
+            }
+        }
 
-        int stepX = (x0 > x1) ? -1 : 1;
-        int stepY = (y0 > y1) ? -1 : 1;
-        int stepZ = (z0 > z1) ? -1 : 1;
+        if(direction[maxGradDir] == 0) {
+            return HitClass.OutOfBounds;
+        }
 
-        int y = y0, z = z0;
-        int lastY = y, lastZ = z;
+        int secondCoord = otherCoordPairs[maxGradDir];
+        int thirdCoord = otherCoordPairs[maxGradDir + 3];
+        int stepFirstCoord;
 
-        // Check if the end of the line hasn't been reached.
-        for(int x = x0; x != x1; x += stepX) {
-            int xCopy = x, yCopy = y, zCopy = z;
+        if(direction[maxGradDir] > 0) {
+            stepFirstCoord = 1;
+        } else {
+            stepFirstCoord = -1;
+        }
 
-            if(steepXZ) Swap(ref xCopy, ref zCopy);
-            if(steepXY) Swap(ref xCopy, ref yCopy);
-            Debug.Log(xCopy + ", " + yCopy + ", " + zCopy);
-            
-            if(xCopy > grid.gridSize.x || yCopy > grid.gridSize.y || zCopy > grid.gridSize.z) {
-                hit = new Vector3Int(xCopy, yCopy, zCopy);
-                return HitClass.OutOfBounds;
+        float secondCoordGradient = (float)direction[secondCoord] / (float)direction[maxGradDir];
+        float thirdCoordGradient = (float)direction[thirdCoord] / (float)direction[maxGradDir];
+
+        int[] curPosInLine = {
+            0, 0, 0
+        };
+
+        int endCoord = direction[maxGradDir] + stepFirstCoord;
+
+        int[] lastPos = new int[3];
+
+        for(int firstCoord = 0; firstCoord != endCoord; firstCoord += stepFirstCoord) {
+            lastPos[0] = curPosInLine[0];
+            lastPos[1] = curPosInLine[1];
+            lastPos[2] = curPosInLine[2];
+            curPosInLine[maxGradDir] = Mathf.FloorToInt((float)(initialPosition[maxGradDir] + firstCoord) + 0.5f);
+            curPosInLine[secondCoord] = Mathf.FloorToInt((float)initialPosition[secondCoord] + (float)firstCoord * secondCoordGradient + 0.5f);
+            curPosInLine[thirdCoord] = Mathf.FloorToInt((float)initialPosition[thirdCoord] + (float)firstCoord * thirdCoordGradient + 0.5f);
+
+            if(curPosInLine[0] >= grid.gridSize.x || curPosInLine[1] >= grid.gridSize.y || curPosInLine[2] >= grid.gridSize.z || curPosInLine[0] < 0 || curPosInLine[1] < 0 || curPosInLine[2] < 0) {
+                hit = new Vector3Int(lastPos[0], lastPos[1], lastPos[2]);
+                Debug.Log(hit[0] + "," + hit[1] + ", " + hit[2] + ";;" + curPosInLine[1]);
+                return HitClass.Hit;
             }
 
-            var tileTest = grid.tileGrid[xCopy, yCopy, zCopy];
+            var tileTest = grid.tileGrid[curPosInLine[0], curPosInLine[1], curPosInLine[2]];
             if(tileTest != null) {
-                var direction = end -  start;
+                var rayDirection = end - start;
                 RaycastHit rayHit;
-                Debug.DrawRay(start + grid.transform.position + new Vector3(.5f, .5f, .5f), direction);
-                if(Physics.Raycast(start + grid.transform.position + new Vector3(.5f, .5f, .5f), direction, out rayHit, direction.magnitude)) {
+                if(Physics.Raycast(start + grid.transform.position + new Vector3(.5f, .5f, .5f), rayDirection, out rayHit, rayDirection.magnitude)) {
                     hitNormal = rayHit.normal;
                 }
 
-                if(tileTest.AcceptBall(new Vector3Int(xCopy, yCopy, zCopy), this, hitNormal)) {
+                if(tileTest.AcceptBall(new Vector3Int(curPosInLine[0], curPosInLine[1], curPosInLine[2]), this, hitNormal)) {
                     this.currentTile = tileTest;
-                    hit = new Vector3Int(xCopy, yCopy, zCopy);
-                    tileTest.PostAccept(new Vector3Int(xCopy, yCopy, zCopy), this, hitNormal);
+                    hit = new Vector3Int(curPosInLine[0], curPosInLine[1], curPosInLine[2]);
+                    tileTest.PostAccept(new Vector3Int(curPosInLine[0], curPosInLine[1], curPosInLine[2]), this, hitNormal);
                     return HitClass.Accepted;
                 } else {
                     if(tileTest.bounce) {
-                        hit = new Vector3Int(x - stepX, lastY, lastZ);
+                        hit = new Vector3Int(lastPos[0], lastPos[1], lastPos[2]);
                         return HitClass.Bounce;
                     } else {
-                        hit = new Vector3Int(x - stepX, lastY, lastZ);
+                        hit = new Vector3Int(lastPos[0], lastPos[1], lastPos[2]);
                         return HitClass.Hit;
                     }
                 }
             }
-
-            errorXY -= deltaY;
-            errorXZ -= deltaZ;
-
-            lastY = y;
-            lastZ = z;
-
-            if(errorXY < 0) {
-                y += stepY;
-                errorXY += deltaX;
-            }
-
-            if(errorXZ < 0) {
-                z += stepZ;
-                errorXZ += deltaX;
-            }
         }
-        hit = new Vector3Int(x1, y, z);
+
+        hit = new Vector3Int(curPosInLine[0], curPosInLine[1], curPosInLine[2]);
         return HitClass.NoHit;
     }
 
@@ -221,6 +255,10 @@ public class Ball : MonoBehaviour {
 
     private void OnValidate() {
         transform.position = currentPosition + grid.transform.position;
+    }
+
+    private void OnDestroy() {
+        grid.tick -= Tick;
     }
 
 }

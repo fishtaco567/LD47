@@ -15,8 +15,39 @@ public abstract class Tile : MonoBehaviour {
 
     public abstract bool AcceptBall(Vector3Int position, Ball ball, Vector3 hitNormal);
 
+    public virtual void Tick() {
+    
+    }
+
     public virtual void PostAccept(Vector3Int position, Ball ball, Vector3 hitNormal) {
     
+    }
+
+    public bool Move(Vector3Int move, BallGrid grid) {
+        if(grid == null) {
+            return false;
+        }
+
+        if(move.x + x < grid.gridSize.x && move.y + y < grid.gridSize.y && move.z + z < grid.gridSize.z && move.x + x >= 0 && move.y + y >= 0 && move.z + z >= 0) {
+            var oldGridPoints = GridPoints();
+            x += move.x;
+            y += move.y;
+            z += move.z;
+            var newGridPoints = GridPoints();
+            
+            foreach(Vector3Int gridPoint in oldGridPoints) {
+                grid.tileGrid[gridPoint.x, gridPoint.y, gridPoint.z] = null;
+            }
+
+            foreach(Vector3Int gridPoint in newGridPoints) {
+                grid.tileGrid[gridPoint.x, gridPoint.y, gridPoint.z] = this;
+            }
+
+            OnValidate();
+
+            return true;
+        }
+        return false;
     }
 
     public Vector3Int[] GridPoints() {
