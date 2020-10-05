@@ -13,6 +13,15 @@ public abstract class Tile : MonoBehaviour {
 
     public bool bounce;
 
+    public bool locked;
+
+    public virtual void Start() {
+        var renderer = GetComponentInChildren<MeshRenderer>();
+        if(locked) {
+            renderer.material.SetColor("_Color", Color.red);
+        }
+    }
+
     public abstract bool AcceptBall(Vector3Int position, Ball ball, Vector3 hitNormal);
 
     public virtual void Tick() {
@@ -34,7 +43,18 @@ public abstract class Tile : MonoBehaviour {
             y += move.y;
             z += move.z;
             var newGridPoints = GridPoints();
-            
+
+            foreach(Vector3Int gridPoint in newGridPoints) {
+                if(grid.tileGrid[gridPoint.x, gridPoint.y, gridPoint.z] == null || grid.tileGrid[gridPoint.x, gridPoint.y, gridPoint.z] == this) {
+
+                } else {
+                    x -= move.x;
+                    y -= move.y;
+                    z -= move.z;
+                    return false;
+                }
+            }
+
             foreach(Vector3Int gridPoint in oldGridPoints) {
                 grid.tileGrid[gridPoint.x, gridPoint.y, gridPoint.z] = null;
             }
@@ -76,6 +96,11 @@ public abstract class Tile : MonoBehaviour {
 
     protected Vector3Int ReduceToDirection(Vector3 normal) {
         var direction = new Vector3Int();
+
+        if(normal == Vector3.zero) {
+            return Vector3Int.zero;
+        }
+
         if(Mathf.Abs(normal.x) > Mathf.Abs(normal.y) && Mathf.Abs(normal.x) > Mathf.Abs(normal.z)) {
             direction.x = (int)Mathf.Sign(normal.x);
         } else if(Mathf.Abs(normal.y) > Mathf.Abs(normal.x) && Mathf.Abs(normal.y) > Mathf.Abs(normal.z)) {
@@ -93,6 +118,10 @@ public abstract class Tile : MonoBehaviour {
 
     public virtual bool IsSatisfied() {
         return false;
+    }
+
+    public bool IsMovable() {
+        return !locked;
     }
 
 }

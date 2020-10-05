@@ -27,6 +27,10 @@ public class Door : MonoBehaviour {
             open = false;
         }
 
+        if(slideStatus == 1) {
+            return;
+        }
+
         if(open) {
             if(slideStatus < 1) {
                 slideStatus += (1 / slideTime) * Time.deltaTime;

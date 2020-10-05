@@ -8,12 +8,12 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: pORTAL
-  m_Shader: {fileID: 4800000, guid: 9c036e91ff302b344ab049e66ba35bbb, type: 3}
+  m_Shader: {fileID: 4800000, guid: 78db5d78b0951ab4f8f47b8c9f51f9d8, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
+  m_CustomRenderQueue: 3000
   stringTagMap: {}
   disabledShaderPasses: []
   m_SavedProperties:

@@ -125,16 +125,19 @@ MonoBehaviour:
   x: 0
   y: 0
   z: 0
-  sizeX: 0
-  sizeY: 0
-  sizeZ: 0
+  sizeX: 1
+  sizeY: 1
+  sizeZ: 1
   bounce: 0
-  timeBetweenHits: 0
+  locked: 0
+  timeBetweenHits: 6
   entryDirection: {x: 0, y: 0, z: 0}
   entryTile: {x: 0, y: 0, z: 0}
-  timeRetainBall: 0
+  timeRetainBall: 1
   exitTile: {x: 0, y: 0, z: -1}
   exitVelocity: {x: 0, y: 0, z: 0}
+  rotationalSpeed: 90
+  rotatedObject: {fileID: 84785613582365194}
 --- !u!65 &1906154739416886214
 BoxCollider:
   m_ObjectHideFlags: 0

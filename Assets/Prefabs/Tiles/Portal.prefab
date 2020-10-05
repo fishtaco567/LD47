@@ -145,10 +145,11 @@ MonoBehaviour:
   x: 0
   y: 0
   z: 0
-  sizeX: 0
-  sizeY: 0
-  sizeZ: 0
+  sizeX: 1
+  sizeY: 1
+  sizeZ: 1
   bounce: 0
+  locked: 0
   pairedPortal: {fileID: 0}
   blorpTime: 0
   retainTime: 0.5

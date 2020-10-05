@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 7731775587760977995}
   - component: {fileID: 7731775587763877995}
   - component: {fileID: 7731775587762748075}
-  - component: {fileID: 2577713745491478801}
   m_Layer: 0
   m_Name: TallRock1
   m_TagString: Untagged
@@ -78,16 +77,3 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!65 &2577713745491478801
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7731775587760481387}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 3.0155168, y: 5.5056868, z: 3.7035928}
-  m_Center: {x: 0.090593874, y: 2.6778421, z: -0.31871694}

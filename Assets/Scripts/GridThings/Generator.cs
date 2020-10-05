@@ -19,7 +19,10 @@ public class Generator : Tile {
     public float rotationalSpeed;
     public GameObject rotatedObject;
 
-    public void Start() {
+    private Vector3Int exitDirection;
+
+    public override void Start() {
+        base.Start();
         timeSinceLastHit = timeBetweenHits;
     }
 
@@ -33,7 +36,7 @@ public class Generator : Tile {
 
     public override void Tick() {
         if(ball != null && timeSinceLastHit > timeRetainBall) {
-            ball.SetPositionVelocity(exitTile + TileBasePos(), exitVelocity, false);
+            ball.SetPositionVelocity(exitDirection + TileBasePos(), exitVelocity, false);
             ball.currentTile = null;
             ball = null;
         }
@@ -41,6 +44,10 @@ public class Generator : Tile {
 
     public override bool AcceptBall(Vector3Int position, Ball ball, Vector3 hitNormal) {
         if(position == new Vector3Int(x, y, z) + entryTile && (ReduceToDirection(hitNormal) == entryDirection || entryDirection.magnitude < 0.01)) {
+            exitDirection = ReduceToDirection(-hitNormal);
+            if(exitDirection.magnitude == 0) {
+                exitDirection = exitTile;
+            }
             this.ball = ball;
             ball.SetPositionVelocity(new Vector3Int(x, y, z), new Vector3Int(0, 0, 0), false);
             timeSinceLastHit = 0;

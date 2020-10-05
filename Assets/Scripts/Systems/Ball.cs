@@ -24,12 +24,17 @@ public class Ball : MonoBehaviour {
 
     public BallGrid grid;
 
+    public bool held;
+
     private float timeSinceLastTick;
+
+    private Vector3Int lastMoveDirection;
 
     // Use this for initialization
     void Start() {
         timeSinceLastTick = 0;
         grid.tick += Tick;
+        grid.balls.Add(this);
     }
 
     private void Update() {
@@ -42,28 +47,72 @@ public class Ball : MonoBehaviour {
         timeSinceLastTick = 0;
         lastFramePosition = currentPosition;
 
-        if(currentTile == null) {
+        if(currentTile == null && !held) {
+            if(grid.tileGrid[currentPosition.x, currentPosition.y, currentPosition.z] != null) {
+                if(grid.tileGrid[currentPosition.x, currentPosition.y, currentPosition.z].AcceptBall(currentPosition, this, lastMoveDirection * -1)) {
+                    currentTile = grid.tileGrid[currentPosition.x, currentPosition.y, currentPosition.z];
+                    grid.tileGrid[currentPosition.x, currentPosition.y, currentPosition.z].PostAccept(currentPosition, this, lastMoveDirection * -1);
+                    if(currentTile != null) {
+                        return;
+                    }
+                }
+            }
+
             currentVelocity += currentAcceleration;
+
+            if(currentVelocity.x != 0) {
+                var toCheck = currentPosition + new Vector3Int((int)Mathf.Sign(currentVelocity.x), 0, 0);
+                if(toCheck.x < 0 || toCheck.x >= grid.gridSize.x) {
+                    currentVelocity.x = 0;
+                }
+            }
+
+            if(currentVelocity.y != 0) {
+                var toCheck = currentPosition + new Vector3Int(0, (int)Mathf.Sign(currentVelocity.y), 0);
+                if(toCheck.y < 0 || toCheck.y >= grid.gridSize.y) {
+                    currentVelocity.y = 0;
+                }
+            }
+
+            if(currentVelocity.z != 0) {
+                var toCheck = currentPosition + new Vector3Int(0, 0, (int)Mathf.Sign(currentVelocity.z));
+                if(toCheck.z < 0 || toCheck.z >= grid.gridSize.z) {
+                    currentVelocity.z = 0;
+                }
+            }
+
             var newPosition = currentPosition + currentVelocity;
             Move(newPosition);
         }
     }
 
-    public void SetPosition(Vector3Int newPosition, bool teleport) {
-        lastFramePosition = currentPosition;
-        currentPosition = newPosition;
-        if(teleport) {
+    public bool SetPosition(Vector3Int newPosition, bool teleport) {
+        if(newPosition.x >= 0 && newPosition.y >= 0 && newPosition.z >= 0 && newPosition.x < grid.gridSize.x && newPosition.y < grid.gridSize.y && newPosition.z < grid.gridSize.z) {
             lastFramePosition = currentPosition;
+            currentPosition = newPosition;
+            if(teleport) {
+                lastFramePosition = currentPosition;
+            } else if((currentPosition - lastFramePosition).magnitude != 0) {
+                lastMoveDirection = currentPosition - lastFramePosition;
+            }
+            return true;
         }
+        return false;
     }
 
-    public void SetPositionVelocity(Vector3Int newPosition, Vector3Int newVelocity, bool teleport) {
-        lastFramePosition = currentPosition;
-        currentPosition = newPosition;
-        currentVelocity = newVelocity;
-        if(teleport) {
+    public bool SetPositionVelocity(Vector3Int newPosition, Vector3Int newVelocity, bool teleport) {
+        if(newPosition.x >= 0 && newPosition.y >= 0 && newPosition.z >= 0 && newPosition.x < grid.gridSize.x && newPosition.y < grid.gridSize.y && newPosition.z < grid.gridSize.z) {
             lastFramePosition = currentPosition;
+            currentPosition = newPosition;
+            currentVelocity = newVelocity;
+            if(teleport) {
+                lastFramePosition = currentPosition;
+            } else if((currentPosition - lastFramePosition).magnitude != 0) {
+                lastMoveDirection = currentPosition - lastFramePosition;
+            }
+            return true;
         }
+        return false;
     }
 
     public void SetAcceleration(Vector3Int newAccel) {
@@ -122,7 +171,6 @@ public class Ball : MonoBehaviour {
                         }
                         break;
                     case HitClass.OutOfBounds:
-                        Destroy(this.gameObject);
                         break;
                 }
                 break;
@@ -145,8 +193,11 @@ public class Ball : MonoBehaviour {
                 SetPosition(newPosition, false);
                 break;
             case HitClass.OutOfBounds:
-                Destroy(this.gameObject);
                 break;
+        }
+
+        if((currentPosition - lastFramePosition).magnitude != 0) {
+            lastMoveDirection = currentPosition - lastFramePosition;
         }
     }
 
@@ -197,7 +248,7 @@ public class Ball : MonoBehaviour {
         float thirdCoordGradient = (float)direction[thirdCoord] / (float)direction[maxGradDir];
 
         int[] curPosInLine = {
-            0, 0, 0
+            initialPosition[0], initialPosition[1], initialPosition[2]
         };
 
         int endCoord = direction[maxGradDir] + stepFirstCoord;
@@ -214,7 +265,6 @@ public class Ball : MonoBehaviour {
 
             if(curPosInLine[0] >= grid.gridSize.x || curPosInLine[1] >= grid.gridSize.y || curPosInLine[2] >= grid.gridSize.z || curPosInLine[0] < 0 || curPosInLine[1] < 0 || curPosInLine[2] < 0) {
                 hit = new Vector3Int(lastPos[0], lastPos[1], lastPos[2]);
-                Debug.Log(hit[0] + "," + hit[1] + ", " + hit[2] + ";;" + curPosInLine[1]);
                 return HitClass.Hit;
             }
 
@@ -230,7 +280,10 @@ public class Ball : MonoBehaviour {
                     this.currentTile = tileTest;
                     hit = new Vector3Int(curPosInLine[0], curPosInLine[1], curPosInLine[2]);
                     tileTest.PostAccept(new Vector3Int(curPosInLine[0], curPosInLine[1], curPosInLine[2]), this, hitNormal);
-                    return HitClass.Accepted;
+                    Debug.Log(currentTile);
+                    if(currentTile != null) {
+                        return HitClass.Accepted;
+                    }
                 } else {
                     if(tileTest.bounce) {
                         hit = new Vector3Int(lastPos[0], lastPos[1], lastPos[2]);

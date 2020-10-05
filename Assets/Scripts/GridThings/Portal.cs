@@ -20,7 +20,8 @@ public class Portal : Tile {
 
     public bool isDestination;
 
-    public void Start() {
+    public override void Start() {
+        base.Start();
         baseScale = transform.localScale;
         timeSinceHit = 0;
         currentRetainedTime = 0;
@@ -38,7 +39,7 @@ public class Portal : Tile {
         if(retainedBall != null) {
             currentRetainedTime += Time.deltaTime;
             if(!isDestination && currentRetainedTime > retainTime) {
-                retainedBall.SetPositionVelocity(new Vector3Int(pairedPortal.x, pairedPortal.y, pairedPortal.z), Vector3Int.zero, true);
+                retainedBall.SetPosition(new Vector3Int(pairedPortal.x, pairedPortal.y, pairedPortal.z), true);
                 pairedPortal.currentRetainedTime = 0;
                 pairedPortal.retainedBall = retainedBall;
                 retainedBall.currentTile = pairedPortal;
@@ -48,16 +49,20 @@ public class Portal : Tile {
             }
 
             if(isDestination && currentRetainedTime > retainTime) {
-                retainedBall.SetPositionVelocity(new Vector3Int(x, y, z) - direction, new Vector3Int(0, -1, 0), false);
+                retainedBall.SetPosition(new Vector3Int(x, y, z) - direction, false);
                 retainedBall.currentTile = null;
                 retainedBall = null;
+                isDestination = false;
             }
         }
     }
 
     public override bool AcceptBall(Vector3Int position, Ball ball, Vector3 hitNormal) {
         direction = ReduceToDirection(hitNormal);
-        ball.SetPositionVelocity(new Vector3Int(x, y, z), new Vector3Int(), false);
+        if(direction == Vector3Int.zero) {
+            direction = ball.currentAcceleration * -1;
+        }
+        ball.SetPosition(new Vector3Int(x, y, z), false);
         retainedBall = ball;
         retainedBall.currentTile = this;
         currentRetainedTime = 0;

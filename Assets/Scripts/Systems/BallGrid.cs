@@ -21,6 +21,8 @@ public class BallGrid : MonoBehaviour
 
     public Action tick;
 
+    public List<Ball> balls;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -66,14 +68,25 @@ public class BallGrid : MonoBehaviour
 
     public Tile GetTileAtWorldPosInt(Vector3Int worldPosInt) {
         var basePos = Vector3Int.FloorToInt(transform.position);
-        Debug.Log(basePos);
         var offsetPos = worldPosInt - basePos;
+        Debug.Log(offsetPos);
 
         if(offsetPos.x < gridSize.x && offsetPos.y < gridSize.y && offsetPos.z < gridSize.z && offsetPos.x >= 0 && offsetPos.y >= 0 && offsetPos.z >= 0) {
             return tileGrid[offsetPos.x, offsetPos.y, offsetPos.z];
         } else {
             return null;
         }
+    }
+
+    public Ball CheckBalls(Vector3Int position) {
+        var basePos = Vector3Int.FloorToInt(transform.position);
+        var offsetPos = position - basePos;
+        foreach(Ball ball in balls) {
+            if(ball.currentPosition == offsetPos) {
+                return ball;
+            }
+        }
+        return null;
     }
 
     private void OnTriggerEnter(Collider other) {
